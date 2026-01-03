@@ -1,0 +1,1444 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1c72KlGHb7rL6_KR9Ti97RNFK-3p50iTpybM-9CRrHXM/edit?pli=1&gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1c72KlGHb7rL6_KR9Ti97RNFK-3p50iTpybM-9CRrHXM/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Status",
+              "lookupValue": "Pending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        180,
+        560
+      ],
+      "id": "ccff9ddb-7193-473b-9f15-c861a5141c61",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "biEx7l6LVLyUddN8",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "32dfd386-6797-4775-aedf-ef2cba1f5b2a",
+              "name": "prompt",
+              "value": "={{ $json['Prompt 1'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        640,
+        560
+      ],
+      "id": "d195105f-99f2-40e1-9378-218e27dc58dd",
+      "name": "Get Prompt 1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const promptText = \"A realistic looking image of \" + $input.first().json.prompt + \"Somber, moody, Low-key lighting.\";\n\n// Function to generate a simple unique ID (fallback if crypto is not available)\nfunction generateUniqueId() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {\n    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\n// Function to generate a random 14-digit number for the seed\nfunction generate14DigitRandomNumber() {\n  const min = 10000000000000; // Smallest 14-digit number (10^13)\n  const max = 99999999999999; // Largest 14-digit number (10^14 - 1)\n  return Math.floor(Math.random() * (max - min + 1)) + min;\n}\n\nconst comfyUiWorkflow = {\n  \"44\": {\n    \"inputs\": {\n      \"text\": \"bad quality, artifacts, nude, nudity, nsfw, explicit, naked, topless, bottomless, lingerie, underwear, sexual, erotic, lewd, porn, exposed breasts, seductive, inappropriate, uncensored\",\n      \"clip\": [\"161\", 0]\n    },\n    \"class_type\": \"CLIPTextEncode\",\n    \"_meta\": {\n      \"title\": \"CLIP Text Encode (Negative)\"\n    }\n  },\n  \"105\": {\n    \"inputs\": {\n      \"vae_name\": \"ae.safetensors\"\n    },\n    \"class_type\": \"VAELoader\",\n    \"_meta\": {\n      \"title\": \"Load VAE\"\n    }\n  },\n  \"161\": {\n    \"inputs\": {\n      \"clip_name1\": \"clip_g_hidream.safetensors\",\n      \"clip_name2\": \"clip_l_hidream.safetensors\",\n      \"clip_name3\": \"llama_3.1_8b_instruct_fp8_scaled.safetensors\",\n      \"clip_name4\": \"t5xxl_fp8_e4m3fn_scaled.safetensors\"\n    },\n    \"class_type\": \"QuadrupleCLIPLoader\",\n    \"_meta\": {\n      \"title\": \"QuadrupleCLIPLoader\"\n    }\n  },\n  \"162\": {\n    \"inputs\": {\n      \"unet_name\": \"hidream-i1-dev-Q3_K_S.gguf\"\n    },\n    \"class_type\": \"UnetLoaderGGUF\",\n    \"_meta\": {\n      \"title\": \"Unet Loader (GGUF)\"\n    }\n  },\n  \"164\": {\n    \"inputs\": {\n      \"text\": promptText,\n      \"clip\": [\"161\", 0]\n    },\n    \"class_type\": \"CLIPTextEncode\",\n    \"_meta\": {\n      \"title\": \"CLIP Text Encode (Positive Prompt)\"\n    }\n  },\n  \"168\": {\n    \"inputs\": {\n      \"add_noise\": \"enable\",\n      \"noise_seed\": generate14DigitRandomNumber(), // UPDATED: Now generates a random 14-digit number\n      \"steps\": 30,\n      \"cfg\": 1.0,\n      \"sampler_name\": \"lcm\",\n      \"scheduler\": \"normal\",\n      \"start_at_step\": 0,\n      \"end_at_step\": 10000,\n      \"return_with_leftover_noise\": \"disable\",\n      \"model\": [\"171\", 0],\n      \"positive\": [\"164\", 0],\n      \"negative\": [\"44\", 0],\n      \"latent_image\": [\"170\", 0]\n    },\n    \"class_type\": \"KSamplerAdvanced\",\n    \"_meta\": {\n      \"title\": \"KSampler (Advanced)\"\n    }\n  },\n  \"169\": {\n    \"inputs\": {\n      \"samples\": [\"168\", 0],\n      \"vae\": [\"105\", 0]\n    },\n    \"class_type\": \"VAEDecode\",\n    \"_meta\": {\n      \"title\": \"VAE Decode\"\n    }\n  },\n  \"170\": {\n    \"inputs\": {\n      \"width\": 1080,\n      \"height\": 1920,\n      \"batch_size\": 1\n    },\n    \"class_type\": \"EmptyLatentImage\",\n    \"_meta\": {\n      \"title\": \"Empty Latent Image\"\n    }\n  },\n  \"171\": {\n    \"inputs\": {\n      \"shift\": 7,\n      \"model\": [\"162\", 0]\n    },\n    \"class_type\": \"ModelSamplingSD3\",\n    \"_meta\": {\n      \"title\": \"ModelSamplingSD3\"\n    }\n  },\n  \"188\": {\n    \"inputs\": {\n      \"filename_prefix\": \"ComfyUI\",\n      \"images\": [\"169\",0]\n    },\n    \"class_type\": \"SaveImage\",\n    \"_meta\": {\n      \"title\": \"Save Image\"\n    }\n  }\n};\n\nreturn [\n  {\n    json: {\n      prompt: comfyUiWorkflow,\n      client_id: generateUniqueId()\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        560
+      ],
+      "id": "5f2fe5d8-e3e5-4849-9ca5-d7bc21c74f4d",
+      "name": "Prompt 1 in JSON"
+    },
+    {
+      "parameters": {
+        "jsCode": "const promptText = \"A realistic looking image of \" + $input.first().json.prompt;\n\n// Function to generate a simple unique ID (fallback if crypto is not available)\nfunction generateUniqueId() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {\n    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\n// Function to generate a random 14-digit number for the seed\nfunction generate14DigitRandomNumber() {\n  const min = 10000000000000; // Smallest 14-digit number (10^13)\n  const max = 99999999999999; // Largest 14-digit number (10^14 - 1)\n  return Math.floor(Math.random() * (max - min + 1)) + min;\n}\n\nconst comfyUiWorkflow = {\n  \"44\": {\n    \"inputs\": {\n      \"text\": \"bad quality, artifacts, nude, nudity, nsfw, explicit, naked, topless, bottomless, lingerie, underwear, sexual, erotic, lewd, porn, exposed breasts, seductive, inappropriate, uncensored\",\n      \"clip\": [\"161\", 0]\n    },\n    \"class_type\": \"CLIPTextEncode\",\n    \"_meta\": {\n      \"title\": \"CLIP Text Encode (Negative)\"\n    }\n  },\n  \"105\": {\n    \"inputs\": {\n      \"vae_name\": \"ae.safetensors\"\n    },\n    \"class_type\": \"VAELoader\",\n    \"_meta\": {\n      \"title\": \"Load VAE\"\n    }\n  },\n  \"161\": {\n    \"inputs\": {\n      \"clip_name1\": \"clip_g_hidream.safetensors\",\n      \"clip_name2\": \"clip_l_hidream.safetensors\",\n      \"clip_name3\": \"llama_3.1_8b_instruct_fp8_scaled.safetensors\",\n      \"clip_name4\": \"t5xxl_fp8_e4m3fn_scaled.safetensors\"\n    },\n    \"class_type\": \"QuadrupleCLIPLoader\",\n    \"_meta\": {\n      \"title\": \"QuadrupleCLIPLoader\"\n    }\n  },\n  \"162\": {\n    \"inputs\": {\n      \"unet_name\": \"hidream-i1-dev-Q3_K_S.gguf\"\n    },\n    \"class_type\": \"UnetLoaderGGUF\",\n    \"_meta\": {\n      \"title\": \"Unet Loader (GGUF)\"\n    }\n  },\n  \"164\": {\n    \"inputs\": {\n      \"text\": promptText,\n      \"clip\": [\"161\", 0]\n    },\n    \"class_type\": \"CLIPTextEncode\",\n    \"_meta\": {\n      \"title\": \"CLIP Text Encode (Positive Prompt)\"\n    }\n  },\n  \"168\": {\n    \"inputs\": {\n      \"add_noise\": \"enable\",\n      \"noise_seed\": generate14DigitRandomNumber(), // UPDATED: Now generates a random 14-digit number\n      \"steps\": 30,\n      \"cfg\": 1.0,\n      \"sampler_name\": \"lcm\",\n      \"scheduler\": \"normal\",\n      \"start_at_step\": 0,\n      \"end_at_step\": 10000,\n      \"return_with_leftover_noise\": \"disable\",\n      \"model\": [\"171\", 0],\n      \"positive\": [\"164\", 0],\n      \"negative\": [\"44\", 0],\n      \"latent_image\": [\"170\", 0]\n    },\n    \"class_type\": \"KSamplerAdvanced\",\n    \"_meta\": {\n      \"title\": \"KSampler (Advanced)\"\n    }\n  },\n  \"169\": {\n    \"inputs\": {\n      \"samples\": [\"168\", 0],\n      \"vae\": [\"105\", 0]\n    },\n    \"class_type\": \"VAEDecode\",\n    \"_meta\": {\n      \"title\": \"VAE Decode\"\n    }\n  },\n  \"170\": {\n    \"inputs\": {\n      \"width\": 1080,\n      \"height\": 1920,\n      \"batch_size\": 1\n    },\n    \"class_type\": \"EmptyLatentImage\",\n    \"_meta\": {\n      \"title\": \"Empty Latent Image\"\n    }\n  },\n  \"171\": {\n    \"inputs\": {\n      \"shift\": 7,\n      \"model\": [\"162\", 0]\n    },\n    \"class_type\": \"ModelSamplingSD3\",\n    \"_meta\": {\n      \"title\": \"ModelSamplingSD3\"\n    }\n  },\n  \"188\": {\n    \"inputs\": {\n      \"filename_prefix\": \"ComfyUI\",\n      \"images\": [\"169\",0]\n    },\n    \"class_type\": \"SaveImage\",\n    \"_meta\": {\n      \"title\": \"Save Image\"\n    }\n  }\n};\n\nreturn [\n  {\n    json: {\n      prompt: comfyUiWorkflow,\n      client_id: generateUniqueId()\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        1000
+      ],
+      "id": "58335729-e68a-40c6-b264-59882241e7e3",
+      "name": "Prompt 2 in JSON"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "32dfd386-6797-4775-aedf-ef2cba1f5b2a",
+              "name": "prompt",
+              "value": "={{ $json['Prompt 2'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        640,
+        1000
+      ],
+      "id": "cd3db73b-017f-43ea-87fb-755484311cdc",
+      "name": "Get Prompt 2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8188/prompt",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "JSON",
+        "body": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1060,
+        1000
+      ],
+      "id": "004a874a-90fd-4cf7-b56a-26818b6f5802",
+      "name": "Call Comfyui 2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8188/prompt",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "JSON",
+        "body": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1040,
+        560
+      ],
+      "id": "0f57f38f-032c-42e3-8891-967ae3ae10cf",
+      "name": "Call Comfyui 1"
+    },
+    {
+      "parameters": {
+        "amount": 13,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        640,
+        760
+      ],
+      "id": "408eb119-44ea-49c7-b860-0a378d7dd1d0",
+      "name": "Image 1 being generated",
+      "webhookId": "d6cf2e64-b698-428c-9d2a-f68f050fdea2",
+      "retryOnFail": false,
+      "maxTries": 5,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "jsCode": "const historyData = $input.first().json;\nconst promptId = Object.keys(historyData)[0];\n\nconst imageData = historyData?.[promptId]?.outputs?.[\"188\"]?.images?.[0];\n\nconst filename = imageData?.filename || \"\";\nconst subfolder = imageData?.subfolder || \"\";\nconst type = imageData?.type || \"\";\n\nconst fullPath = `${type}/${subfolder}${subfolder ? \"/\" : \"\"}${filename}`;\n\nconst suffix = '1';\n\n// Return an array of objects, where each object has a 'json' property\n// for the new data, and an 'pairedItem' property pointing to the original input item.\nreturn [\n  {\n    json: {\n      [`prompt_id${suffix}`]: promptId,\n      [`filename${suffix}`]: filename,\n      [`fullPath${suffix}`]: fullPath\n    },\n    // Crucially, include pairedItem to link back to the original input item\n    pairedItem: $input.first(),\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        760
+      ],
+      "id": "a4d4d3a1-0b72-46fa-afe7-c45c65d8a24d",
+      "name": "Get Image 1 filename"
+    },
+    {
+      "parameters": {
+        "jsCode": "const historyData = $input.first().json;\nconst promptId = Object.keys(historyData)[0];\n\nconst imageData = historyData?.[promptId]?.outputs?.[\"188\"]?.images?.[0];\n\nconst filename = imageData?.filename || \"\";\nconst subfolder = imageData?.subfolder || \"\";\nconst type = imageData?.type || \"\";\n\nconst fullPath = `${type}/${subfolder}${subfolder ? \"/\" : \"\"}${filename}`;\n\nconst suffix = '2';\n\n// Return an array of objects, where each object has a 'json' property\n// for the new data, and an 'pairedItem' property pointing to the original input item.\nreturn [\n  {\n    json: {\n      [`prompt_id${suffix}`]: promptId,\n      [`filename${suffix}`]: filename,\n      [`fullPath${suffix}`]: fullPath\n    },\n    // Crucially, include pairedItem to link back to the original input item\n    pairedItem: $input.first(),\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1060,
+        1200
+      ],
+      "id": "531bc88f-365e-44f2-b974-9166dd7af38f",
+      "name": "Get Image 2 filename"
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:8188/history/{{ $json.prompt_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        1200
+      ],
+      "id": "f80688cd-da65-4638-978c-b16a5c235e11",
+      "name": "Image 2 History",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "amount": 13,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        640,
+        1200
+      ],
+      "id": "a8a67b91-1c56-4f13-afa5-c963067f04f0",
+      "name": "Image 2 being generated",
+      "webhookId": "c4564ccc-fcbc-48dc-98c0-cded27a5cea0"
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:8188/view?filename=output/{{ $json.filename1 }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1260,
+        760
+      ],
+      "id": "7b1fbd1f-6ea2-463c-85fa-25e6b293cd7c",
+      "name": "Get Image 1 file"
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:8188/view?filename=output/{{ $json.filename2 }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1260,
+        1200
+      ],
+      "id": "f7ed00fa-4595-4ed1-9917-0f9ac3f884de",
+      "name": "Get Image 2 file"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1660,
+        680
+      ],
+      "id": "575cc7f0-ad7b-4afe-85dc-94a5a13590e0",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "32dfd386-6797-4775-aedf-ef2cba1f5b2a",
+              "name": "thought p1",
+              "value": "={{ $json['Part 1'] }}",
+              "type": "string"
+            },
+            {
+              "id": "f94e34b5-b2c2-4f1a-99a8-c426132b5edf",
+              "name": "thought p2",
+              "value": "={{ $json['Part 2'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        640,
+        1460
+      ],
+      "id": "fac28674-e561-4d3d-9ed6-f2c6743e3c55",
+      "name": "read thought"
+    },
+    {
+      "parameters": {
+        "jsCode": "const firstRow = $input.first().json;\n\nreturn [\n  {\n    json: {\n      \"thought p1\": firstRow[\"thought p1\"],\n      \"thought p2\": firstRow[\"thought p2\"]\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        1460
+      ],
+      "id": "7949563d-9868-4c61-8859-f942b51e92ea",
+      "name": "get single thought"
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.all().map(item => item.json); \n\nconst BASE_PATH_IN_DOCKER = '/data/comfy_output'; \n\nlet filename1, fullPath1, filename2, fullPath2, thoughtP1, thoughtP2, b=\"He said...\\n   I'm correct, aren't I ?\";\n\n// Generate a unique temporary filename using a timestamp\nconst formatter = new Intl.DateTimeFormat('en-GB', {\n  timeZone: 'Asia/Kolkata',\n  day: '2-digit',\n  month: '2-digit',\n  year: 'numeric',\n  hour: '2-digit',\n  minute: '2-digit',\n  hour12: false\n});\n\nconst parts = formatter.formatToParts(new Date());\nconst getPart = (type) => parts.find(p => p.type === type)?.value;\n\nconst timestamp = `${getPart('day')}${getPart('month')}${getPart('year')}${getPart('hour')}${getPart('minute')}`;\n\n\nconst tempVideoFilename = `output_video_${timestamp}.mp4`;\nconst tempVideoPath = `/data/comfy_output/ffmpeg/${tempVideoFilename}`;\n\nfor (const item of inputData) {\n  if (item.filename1) {\n    filename1 = item.filename1;\n    fullPath1 = `${BASE_PATH_IN_DOCKER}/${item.filename1}`; \n  }\n  if (item.filename2) {\n    filename2 = item.filename2;\n    fullPath2 = `${BASE_PATH_IN_DOCKER}/${item.filename2}`;\n  }\n  if (item[\"thoughtP1\"] !== undefined || item[\"thought p1\"] !== undefined) {\n    // Accept both variations of the key for safety\n    thoughtP1 = item[\"thoughtP1\"] || item[\"thought p1\"];\n    thoughtP2 = item[\"thoughtP2\"] || item[\"thought p2\"];\n  }\n}\n\nreturn [{\n  json: {\n    filename1,\n    fullPath1,\n    filename2,\n    fullPath2,\n    thoughtP1,\n    thoughtP2,\n    b,\n    tempVideoPath\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1940,
+        680
+      ],
+      "id": "85850cea-2db3-4a80-bc1c-9913121f0b9b",
+      "name": "Prepare Video Data"
+    },
+    {
+      "parameters": {
+        "command": "=ffmpeg -i \"{{ $json.fullPath1 }}\" -i \"{{ $json.fullPath2 }}\" -filter_complex \"\n  color=c=black:s=1080x1920:d=3[black];\n\n  [0:v]loop=loop=-1:size=1,setpts=PTS-STARTPTS,fade=t=in:st=0:d=2[v1_initial];\n  [v1_initial]trim=duration=7,fade=t=out:st=6:d=1[v1_final];\n\n  [1:v]loop=loop=-1:size=1,setpts=PTS-STARTPTS,fade=t=in:st=0:d=2[v2_initial];\n  [v2_initial]trim=duration=10,fade=t=out:st=9:d=1[v2_final];\n\n  [v1_final][black][v2_final]concat=n=3:v=1:a=0[base];\n\n  [base]drawbox=enable='between(t,0,7)':x=0:y={{ $json.stripTopP1 }}:w=iw:h={{ $json.stripHeightP1 }}:color=black@0.5:t=fill[bg1];\n  [bg1]drawtext=text='{{ $json.thoughtP1 }}':fontfile=/usr/share/fonts/truetype/msttcorefonts/fonnts.com-Komet_Bold.otf:\n      fontsize=50:fontcolor=white:\n      x=(w-text_w)/2:y=(h-text_h)/2:line_spacing=5:\n      alpha='if(lt(t,1),0, if(lt(t,3),(t-1)/2, if(lt(t,6),1, if(lt(t,7),(7-t)/1, 0))))':\n      enable='between(t,0,7)':text_shaping=1[txt1];\n\n  [txt1]drawbox=enable='between(t,7,10)':x=0:y={{ $json.stripTopbt }}:w=iw:h={{ $json.stripHeightbt }}:color=black@0.5:t=fill[bg_bt];\n  [bg_bt]drawtext=text='{{ $json.b }}':fontfile=/usr/share/fonts/truetype/msttcorefonts/fonnts.com-Komet_Bold.otf:\n      fontsize=50:fontcolor=white:\n      x=(w-text_w)/2:y=(h-text_h)/2:line_spacing=5:\n      alpha='if(lt(t,7),0, if(lt(t,8),(t-7)/1, if(lt(t,9),1, if(lt(t,10),(10-t)/1, 0))))':\n      enable='between(t,7,10)':text_shaping=1[txtbt];\n\n  [txtbt]drawbox=enable='between(t,10,20)':x=0:y={{ $json.stripTopP2 }}:w=iw:h={{ $json.stripHeightP2 }}:color=black@0.5:t=fill[bg2];\n  [bg2]drawtext=text='{{ $json.thoughtP2 }}':fontfile=/usr/share/fonts/truetype/msttcorefonts/fonnts.com-Komet_Bold.otf:\n      fontsize=50:fontcolor=white:\n      x=(w-text_w)/2:y=(h-text_h)/2:line_spacing=5:\n      alpha='if(lt(t,10),0, if(lt(t,12),(t-10)/2, 1))':\n      enable='between(t,10,20)':text_shaping=1[final];\n\n  [final]drawtext=text='@TheSilenceWithinStillness':fontfile=/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf:\n      fontsize=30:fontcolor=white:x=(w-text_w)/2:y=h*0.125:enable='between(t,0,20)'[v]\n\" -map \"[v]\" -t 20 -c:v libx264 -pix_fmt yuv420p -y \"{{ $json.tempVideoPath }}\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        2360,
+        540
+      ],
+      "id": "6e31d7df-507e-4c2f-9ff2-f1852e67f64b",
+      "name": "Generate Video"
+    },
+    {
+      "parameters": {
+        "jsCode": "const wrapText = (text, maxChars = 35) => {\n  const words = text.split(' ');\n  let line = '';\n  const lines = [];\n\n  for (const word of words) {\n    if ((line + word).length <= maxChars) {\n      line += word + ' ';\n    } else {\n      lines.push(line.trim());\n      line = word + ' ';\n    }\n  }\n  if (line.trim()) lines.push(line.trim());\n  return lines.join('\\n   ');\n};\n\nreturn items.map(item => {\n  const newItem = { ...item };\n\n  // Raw input\n  const rawThought1 = item.json['thought p1'] || '';\n  const rawThought2 = item.json['thought p2'] || '';\n\n  // Prepend \"He asked:\\n\" before wrapping the rest\n  const wrappedThought1 = wrapText(rawThought1);\n  const fullThought1 = `He asked...\\n   ${wrappedThought1}`;\n\n  const wrappedThought2 = wrapText(rawThought2);\n  const fullThought2 = `He said...\\n   ${wrappedThought2}`;\n\n  // Set new keys\n  newItem.json['thoughtP1'] = fullThought1;\n  newItem.json['thoughtP2'] = fullThought2;\n\n  // Remove original keys if needed\n  delete newItem.json['thought p1'];\n  delete newItem.json['thought p2'];\n\n  return newItem;\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1260,
+        1460
+      ],
+      "id": "d59128fd-34b5-46fa-9fc1-1ce9de1acc29",
+      "name": "single line to multi line"
+    },
+    {
+      "parameters": {
+        "jsCode": "const lineHeight = 70;\nconst basePadding = 20;\nconst videoHeight = 1920;\nconst topPaddingPercent = 0.5; // target center point of box\n\nreturn items.map(item => {\n  const escapeForFFmpeg = text =>\n    text.replace(/'/g, '’');\n\n  const p1 = item.json.thoughtP1 || '';\n  const p2 = item.json.thoughtP2 || '';\n  const bt = item.json.b || '';\n\n  const lineCount1 = p1.split('\\n').length;\n  const lineCount2 = p2.split('\\n').length;\n  const lineCount3 = bt.split('\\n').length;\n\n  const height1 = (lineCount1 * lineHeight) + basePadding;\n  const height2 = (lineCount2 * lineHeight) + basePadding;\n  const height3 = (lineCount3 * lineHeight) + basePadding;\n\n  const top1 = (videoHeight * topPaddingPercent) - (height1 / 2);\n  const top2 = (videoHeight * topPaddingPercent) - (height2 / 2);\n  const top3 = (videoHeight * topPaddingPercent) - (height3 / 2);\n\n  item.json.stripHeightP1 = height1;\n  item.json.stripTopP1 = top1;\n  item.json.stripHeightP2 = height2;\n  item.json.stripTopP2 = top2;\n  item.json.stripHeightbt = height3;\n  item.json.stripTopbt = top3;\n\n  item.json.thoughtP1 = escapeForFFmpeg(p1);\n  item.json.thoughtP2 = escapeForFFmpeg(p2);\n  item.json.b = escapeForFFmpeg(bt);\n\n  return item;\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        540
+      ],
+      "id": "c44d7c83-300d-416a-a40d-fcbc950f25e4",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1c72KlGHb7rL6_KR9Ti97RNFK-3p50iTpybM-9CRrHXM/edit?pli=1&gid=1720885139#gid=1720885139",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1720885139,
+          "mode": "list",
+          "cachedResultName": "Sheet2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1c72KlGHb7rL6_KR9Ti97RNFK-3p50iTpybM-9CRrHXM/edit#gid=1720885139"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "status",
+              "lookupValue": "unused"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        160,
+        -240
+      ],
+      "id": "100dea98-13f0-43d1-9e79-0725e38a1cf6",
+      "name": "Get row(s) in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "biEx7l6LVLyUddN8",
+          "name": "Google Sheets account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2640,
+        660
+      ],
+      "id": "3f7bc960-b4bd-466a-8b9a-8e76313743e0",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "command": "sh -c 'find /data/comfy_output/ffmpeg/bgmusic -type f | shuf -n 1'\n"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        160,
+        -460
+      ],
+      "id": "b0e965c4-229d-48df-b16f-b096015faf13",
+      "name": "Execute Command",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "83e20c21-c9b3-4bdb-b8de-e767eb2eaca8",
+              "name": "bgmPath",
+              "value": "={{$json[\"stdout\"].trim()}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1220,
+        -460
+      ],
+      "id": "2ff067c2-547a-4855-a39a-e1dea6bc46a5",
+      "name": "Edit Fields",
+      "alwaysOutputData": false,
+      "disabled": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1720,
+        -640
+      ],
+      "id": "65b4a13e-7aae-4f9c-bab9-19b687f94f86",
+      "name": "Merge3",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Combine the array of objects into one object\nconst combined = {};\n\nfor (const item of $input.all()) {\n  Object.assign(combined, item.json);\n}\n\nreturn [{ json: combined }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2860,
+        660
+      ],
+      "id": "2ceb6ac9-30e9-4d7a-a007-c85c46ecd915",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/30 * * * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -240,
+        440
+      ],
+      "id": "2c9caea8-1ade-463e-82c6-0fa42e1ce716",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $json.tempVideoPath }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        3080,
+        660
+      ],
+      "id": "253ff473-da36-4b72-a6d8-ee17d8178e11",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1c72KlGHb7rL6_KR9Ti97RNFK-3p50iTpybM-9CRrHXM/edit?pli=1&gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1c72KlGHb7rL6_KR9Ti97RNFK-3p50iTpybM-9CRrHXM/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "done",
+            "ID": "={{ $json.fID }}"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Part 1",
+              "displayName": "Part 1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Prompt 1",
+              "displayName": "Prompt 1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Part 2",
+              "displayName": "Part 2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Prompt 2",
+              "displayName": "Prompt 2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Local_Video_Path",
+              "displayName": "Local_Video_Path",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        840,
+        1720
+      ],
+      "id": "58cd86e3-7710-401c-b51c-b7dcdef75f00",
+      "name": "Update row in sheet",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "biEx7l6LVLyUddN8",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  \"fID\": $input.first().json.ID\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        1720
+      ],
+      "id": "06857fd5-f0f3-440e-8008-5ea054deb0bd",
+      "name": "Code4"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        720
+      ],
+      "id": "74f7a1ad-6576-4aa5-b9df-a86b146d34d3",
+      "name": "When clicking ‘Execute workflow’",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:8188/history/{{ $json.prompt_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        760
+      ],
+      "id": "7d15c0c6-38b1-4024-a791-40232b27e478",
+      "name": "Image 1 History",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "content": "## generate image 1",
+        "height": 420,
+        "width": 840
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        580,
+        500
+      ],
+      "id": "b9fb8306-bc3c-40d2-8fab-14abf990aef6",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## generate image 2",
+        "height": 420,
+        "width": 840,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        580,
+        940
+      ],
+      "id": "01d3d85c-444c-4412-b3a7-32c9c9392fb3",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## multiline thought",
+        "height": 240,
+        "width": 840,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        580,
+        1380
+      ],
+      "id": "07fdeae9-34fe-4ccf-84c2-5b4c0402ee7d",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## update row ( pending to done )",
+        "height": 240,
+        "width": 840,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        580,
+        1640
+      ],
+      "id": "0d3f1585-0468-464a-ad39-34406b5a81d1",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## generate video",
+        "height": 380,
+        "width": 680,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1880,
+        480
+      ],
+      "id": "bd30c486-8227-435d-95cb-8dde50c81838",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "aff230a7-4987-456a-9610-7b28a46bc544",
+              "name": "ytTitle",
+              "value": "={{ $json.TUH }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2480,
+        -240
+      ],
+      "id": "33188c41-bc0b-4397-8dd4-ab47c8e4bd66",
+      "name": "Edit Fields1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "## update row ( pending to done )",
+        "height": 240,
+        "width": 480,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        560,
+        -100
+      ],
+      "id": "c1d73429-4a43-478c-85c3-af4ac6cd6835",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  \"fID\": $input.first().json.ID\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        620,
+        -20
+      ],
+      "id": "0f58b926-24ef-45a3-a69e-44cd02a534fa",
+      "name": "Code6",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1c72KlGHb7rL6_KR9Ti97RNFK-3p50iTpybM-9CRrHXM/edit?pli=1&gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1720885139,
+          "mode": "list",
+          "cachedResultName": "Sheet2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1c72KlGHb7rL6_KR9Ti97RNFK-3p50iTpybM-9CRrHXM/edit#gid=1720885139"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $json.fID }}",
+            "status": "used"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "T",
+              "displayName": "T",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "U",
+              "displayName": "U",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "H",
+              "displayName": "H",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TUH",
+              "displayName": "TUH",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        820,
+        -20
+      ],
+      "id": "3ff4f774-b9c6-4a5c-8d4a-cae8c12e2ad6",
+      "name": "Update row in sheet2",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "biEx7l6LVLyUddN8",
+          "name": "Google Sheets account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": "={{ $('Code2').item.json.ytTitle }}",
+        "regionCode": "IN",
+        "categoryId": "22",
+        "options": {
+          "description": "Feel the strength in silence. 🔥|This quote is for the ones quietly enduring, pushing through the storm, and rising in stillness. Let it fuel you.#Discipline #Motivation #DeepQuotes #MentalStrength #SelfMastery #Success #Mindset",
+          "privacyStatus": "public",
+          "selfDeclaredMadeForKids": false,
+          "tags": "motivational quotes,deep quotes,self discipline motivation,inner strength,silence motivation,pain to power,cinematic motivation,life changing quotes,quotes to live by,quotes about success,silent strength,endure the pain,hardship and growth,quotes that hit hard,mindset quotes,spiritual motivation,stoic quotes,emotional motivation,motivational shorts,powerful thoughts\n"
+        }
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        3300,
+        660
+      ],
+      "id": "9902fb51-bed3-4118-b6ac-0eb7b7a34ebf",
+      "name": "Upload a video",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "MJKCRiSD2PGbiI1B",
+          "name": "YouTube account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "## upload video to YT",
+        "height": 320,
+        "width": 740,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2800,
+        540
+      ],
+      "id": "549eea89-2aba-4770-babf-1b5cd7125fe1",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ytTitle:$input.first().json.ytTitle}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2680,
+        -240
+      ],
+      "id": "3cdea5b8-f36f-4d96-8a91-9b6299fa6e73",
+      "name": "Code3",
+      "disabled": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Get Prompt 1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Prompt 2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "read thought",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Prompt 1": {
+      "main": [
+        [
+          {
+            "node": "Prompt 1 in JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prompt 1 in JSON": {
+      "main": [
+        [
+          {
+            "node": "Call Comfyui 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prompt 2 in JSON": {
+      "main": [
+        [
+          {
+            "node": "Call Comfyui 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Prompt 2": {
+      "main": [
+        [
+          {
+            "node": "Prompt 2 in JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Comfyui 2": {
+      "main": [
+        [
+          {
+            "node": "Image 2 being generated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Comfyui 1": {
+      "main": [
+        [
+          {
+            "node": "Image 1 being generated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image 1 being generated": {
+      "main": [
+        [
+          {
+            "node": "Image 1 History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Image 1 filename": {
+      "main": [
+        [
+          {
+            "node": "Get Image 1 file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Image 2 filename": {
+      "main": [
+        [
+          {
+            "node": "Get Image 2 file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image 2 History": {
+      "main": [
+        [
+          {
+            "node": "Get Image 2 filename",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image 2 being generated": {
+      "main": [
+        [
+          {
+            "node": "Image 2 History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Image 2 file": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get Image 1 file": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "read thought": {
+      "main": [
+        [
+          {
+            "node": "get single thought",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get single thought": {
+      "main": [
+        [
+          {
+            "node": "single line to multi line",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Prepare Video Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Video Data": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Generate Video": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "single line to multi line": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Generate Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Command": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        []
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        []
+      ]
+    },
+    "Code4": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image 1 History": {
+      "main": [
+        [
+          {
+            "node": "Get Image 1 filename",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code6": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c13823c3-282a-4b63-b4ce-af9ac83db3bb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "38f857b480b3d801ee2efb69f67a694575df397afa287ba77f2bd8c95f23666e"
+  },
+  "id": "1JE7mt8o6lpzzMfy",
+  "tags": []
+}
